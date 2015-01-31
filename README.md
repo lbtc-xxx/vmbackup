@@ -34,7 +34,7 @@ My crontab example which runs purge and backup at every next morning of weekday 
 	ANT_HOME=/Users/kyle/apache-ant-1.9.4
 	JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_31.jdk/Contents/Home
 	JAVA_CMD=$JAVA_HOME/bin/java
-	2 7 * * 2-6 $ANT_HOME/bin/ant purge stop-backup-start 2>&1 | logger -p local0.notice
+	2 7 * * 2-6 $ANT_HOME/bin/ant -f /Users/kyle/build.xml purge stop-backup-start 2>&1 | logger -p local0.notice
 
 How backup destination will be
 ------------------------------
