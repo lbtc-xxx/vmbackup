@@ -1,0 +1,110 @@
+<project name="vmbackup" basedir="." default="usage">
+    <xmlproperty file="build-props.xml"/>
+    <property name="sudo" value="/usr/bin/sudo"/>
+    <property name="tmutil" value="/usr/bin/tmutil"/>
+    <property name="vmrun" value="/Applications/VMware Fusion.app/Contents/Library/vmrun"/>
+    <property name="hostType" value="fusion"/>
+    <property name="mount_afp" value="/sbin/mount_afp"/>
+    <property name="umount" value="/sbin/umount"/>
+
+    <target name="usage">
+        <echo>
+            targets:
+            - stop-backup-start
+            - purge
+        </echo>
+    </target>
+
+    <target name="stop-backup-start" depends="stop-vm,mount,backup,umount,start-vm"/>
+    <target name="purge" depends="mount,dopurge,umount"/>
+
+    <target name="stop-vm">
+        <fail unless="prop.vmx"/>
+        <exec executable="${vmrun}" failonerror="true">
+            <arg value="-T"/>
+            <arg value="${hostType}"/>
+            <arg value="stop"/>
+            <arg value="${prop.vmx}"/>
+            <arg value="soft"/>
+        </exec>
+    </target>
+
+    <target name="mount">
+        <fail unless="prop.tc.local"/>
+        <mkdir dir="${prop.tc.local}"/>
+        <exec executable="${mount_afp}" failonerror="true">
+            <arg value="afp://${prop.tc.user}:${prop.tc.password}@${prop.tc.host}/${prop.tc.remote}"/>
+            <arg value="${prop.tc.local}"/>
+        </exec>
+    </target>
+
+    <target name="backup">
+        <fail unless="prop.vmx"/>
+        <fail unless="prop.tc.local"/>
+        <fail unless="prop.tc.prefix"/>
+        <dirname property="vm.dir" file="${prop.vmx}"/>
+        <basename property="vm.basename" file="${vm.dir}"/>
+        <tstamp>
+            <format property="now" pattern="yyyyMMdd_HHmmss"/>
+        </tstamp>
+        <copy todir="${prop.tc.local}/${prop.tc.prefix}/${now}/${vm.basename}" verbose="true">
+            <fileset dir="${vm.dir}"/>
+        </copy>
+    </target>
+
+    <target name="umount">
+        <fail unless="prop.tc.local"/>
+        <exec executable="${umount}" failonerror="true">
+            <arg value="${prop.tc.local}"/>
+        </exec>
+    </target>
+
+    <target name="start-vm">
+        <fail unless="prop.vmx"/>
+        <exec executable="${vmrun}" failonerror="true">
+            <arg value="-T"/>
+            <arg value="${hostType}"/>
+            <arg value="start"/>
+            <arg value="${prop.vmx}"/>
+        </exec>
+    </target>
+
+    <target name="dopurge">
+        <fail unless="prop.preserves"/>
+        <fail unless="prop.tc.local"/>
+        <fail unless="prop.tc.prefix"/>
+        <resources id="var.sorted">
+            <sort>
+                <name/>
+                <dirset dir="${prop.tc.local}/${prop.tc.prefix}" includes="*"/>
+            </sort>
+        </resources>
+        
+        <resources id="var.preserves">
+            <last count="${prop.preserves}">
+                <resources refid="var.sorted"/>
+            </last>
+        </resources>
+
+        <difference id="var.to-purge">
+            <resources refid="var.sorted"/>
+            <resources refid="var.preserves"/>
+        </difference>
+
+        <!--
+        converting a resource collection to comma separated string
+        which will be used as an argument of files task
+        http://ant.1045680.n5.nabble.com/Resource-collections-Linux-vs-windows-td5714898.html
+        -->
+        <pathconvert property="dirs-to-delete" pathsep="," refid="var.to-purge">
+            <!-- add ** as suffix for each element (directory) -->
+            <regexpmapper from="(^.*$)" to="\1\${file.separator}**" />
+        </pathconvert>
+
+        <delete verbose="true">
+            <files includes="${dirs-to-delete}"/>
+        </delete>
+
+    </target>
+
+</project>

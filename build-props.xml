@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<prop>
+	<!-- path to vmx -->
+	<vmx>/Users/kyle/Documents/Virtual Machines.localized/CentOS (64 bit).vmwarevm/CentOS (64 bit).vmx</vmx>
+	<tc>
+		<!-- mount point -->
+		<local>/Volumes/TimeCapsule</local>
+		<!-- hostname or IP address of Time Capsule -->
+		<host>10.0.1.1</host>
+		<!-- the user name to use in authentication but probably anything is ok for Time Capsule -->
+		<user>me</user>
+		<!-- the password to use in authentication -->
+		<password>EDITME</password>
+		<!-- the name of remote directory to be mounted -->
+		<remote>Data</remote>
+		<!-- prefix of the backup destination. when copying, this path will be added after preceding ${prop.tc.remote} -->
+		<prefix>Finance</prefix>
+	</tc>
+	<!-- the number of generation that to be preserved after purge -->
+	<preserves>2</preserves>
+</prop>
